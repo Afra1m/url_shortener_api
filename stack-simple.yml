@@ -1,0 +1,34 @@
+﻿version: '3.8'
+
+services:
+  shortener:
+    image: shortener:latest
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: any
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - ANALYTICS_URL=http://analytics:8081
+
+  analytics:
+    image: analytics:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+
+  nginx:
+    image: nginx-simple:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+    ports:
+      - "80:80"

@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  url-shortener:
+    image: shortener:latest
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      update_config:
+        parallelism: 1
+        delay: 10s
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+      - ANALYTICS_URL=http://analytics:8081
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  analytics:
+    image: analytics:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+    environment:
+      - PORT=8081
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  nginx:
+    image: nginx-fixed:latest
+    ports:
+      - "80:80"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - microservices-net
+    depends_on:
+      - url-shortener
+      - analytics
+
+networks:
+  microservices-net:
+    driver: overlay
